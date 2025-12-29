@@ -1,0 +1,77 @@
+---
+- name: Prepare basic requirements on all machines
+  hosts: all
+  become: true
+  tasks:
+    - name: Install common packages
+      apt:
+        name:
+          - curl
+          - wget
+          - apt-transport-https
+          - ca-certificates
+          - gnupg
+          - lsb-release
+          - python3
+          - python3-pip
+          - python3-venv
+          - git
+        state: present
+        update_cache: yes
+      tags:
+        - base
+
+- name: Add Elastic repository
+  hosts: logstash, elasticsearch, kibana
+  become: true
+  tasks:
+    - name: Add Elastic repository
+      shell: |
+        curl -fsSL https://artifacts.elastic.co/GPG-KEY-elasticsearch | sudo apt-key add -
+        echo "deb https://artifacts.elastic.co/packages/7.x/apt stable main" | sudo tee /etc/apt/sources.list.d/elastic-7.x.list
+      tags: base_elastic
+
+- name: Deploy Elasticsearch
+  hosts: elasticsearch
+  become: true
+  roles:
+    - role: elasticsearch
+      tags: elasticsearch
+
+- name: Deploy Logstash
+  hosts: logstash
+  become: true
+  roles:
+    - role: logstash
+      tags: logstash
+
+- name: Deploy Kibana
+  hosts: kibana
+  become: true
+  roles:
+    - role: kibana
+      tags: kibana
+
+- name: Deploy Nginx as a Kibana proxy
+  hosts: frontend
+  become: true
+  roles:
+    - role: nginx_kibana
+      tags: nginx_kibana
+
+- name: Deploy data generator
+  hosts: generator
+  become: true
+  vars_files:
+    - secrets.yml 
+  roles:
+    - role: generator
+      tags:
+        - generator
+
+- name: Deploy Nagios
+  hosts: nagios
+  become: true
+  roles:
+    - role: nagios
+      tags: nagios

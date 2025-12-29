@@ -1,0 +1,23 @@
+# Replace with your own node IPs
+
+[generator]
+10.0.0.10 hostname=gen-node-01 query_term="AI"
+10.0.0.11 hostname=gen-node-02 query_term="artificial intelligence"
+
+[logstash]
+10.0.0.20 hostname=logstash-node-01
+10.0.0.21 hostname=logstash-node-02
+
+[elasticsearch]
+10.0.0.30 hostname=elasticsearch-node-01
+10.0.0.31 hostname=elasticsearch-node-02
+10.0.0.32 hostname=elasticsearch-node-03
+
+[kibana]
+10.0.0.40 hostname=kibana-node-01
+
+[nagios]
+10.0.0.50
+
+[frontend]
+10.0.0.50

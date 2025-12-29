@@ -1,0 +1,9 @@
+---
+- name: Enable monitoring
+  hosts: localhost
+  connection: local
+  gather_facts: no
+  become: true
+  roles:
+    - role: monitor
+      tags: monitor
