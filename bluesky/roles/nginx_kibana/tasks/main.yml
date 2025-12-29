@@ -1,0 +1,32 @@
+---
+- name: Install Nginx
+  apt:
+    name: nginx
+    state: present
+    update_cache: yes
+
+- name: Copy Nginx configuration for Kibana
+  template:
+    src: nginx_kibana.conf.j2
+    dest: /etc/nginx/sites-available/kibana.conf
+    owner: root
+    group: root
+    mode: '0644'
+
+- name: Enable Kibana site in Nginx
+  file:
+    src: /etc/nginx/sites-available/kibana.conf
+    dest: /etc/nginx/sites-enabled/kibana.conf
+    state: link
+
+- name: Disable default Nginx configuration
+  file:
+    path: /etc/nginx/sites-enabled/default
+    state: absent
+
+- name: Restart Nginx
+  systemd:
+    name: nginx
+    enabled: yes
+    state: restarted
+    daemon_reload: yes

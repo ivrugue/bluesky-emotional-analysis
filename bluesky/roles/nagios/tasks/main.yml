@@ -1,0 +1,28 @@
+---
+- name: Install Nagios and dependencies
+  apt:
+    name:
+      - nagios4
+      - nagios-plugins
+      - nagios-plugins-basic
+      - nagios-plugins-standard
+      - apache2
+    state: present
+    update_cache: yes
+
+- name: Enable Apache CGI module
+  apache2_module:
+    name: cgi
+    state: present
+
+- name: Copy Nagios hosts and services configuration
+  template:
+    src: nagios_hosts.cfg.j2
+    dest: /etc/nagios4/objects/hosts.cfg
+  notify: reload nagios
+
+- name: Enable and start Nagios
+  systemd:
+    name: nagios4
+    enabled: yes
+    state: started

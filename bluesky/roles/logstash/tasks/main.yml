@@ -1,0 +1,27 @@
+---
+- name: Install Java
+  apt:
+    name: openjdk-17-jre-headless
+    state: present
+    update_cache: yes
+
+- name: Install Logstash
+  apt:
+    name: logstash
+    state: present
+    update_cache: yes
+
+- name: Configure logstash.conf
+  template:
+    src: logstash.conf.j2
+    dest: /etc/logstash/conf.d/logstash.conf
+    owner: root
+    group: root
+    mode: '0644'
+
+- name: Enable and restart Logstash
+  systemd:
+    name: logstash
+    enabled: yes
+    state: restarted
+    daemon_reload: yes

@@ -1,0 +1,49 @@
+input {
+  tcp {
+    host => "0.0.0.0"
+    port => 5001
+    codec => json_lines
+  }
+}
+
+filter {
+  date {
+    match => ["created", "ISO8601"]
+    target => "@timestamp"
+  }
+
+  mutate {
+    convert => {
+      "sentiment_score" => "float"
+      "subjectivity_score" => "float"
+    }
+    add_field => { "[@metadata][_id]" => "%{uri}" }
+  }
+
+  if [subjectivity_score] == 0.0 {
+    drop {}
+  }
+
+  if [sentiment_score] >= 0.05 {
+    mutate {
+      add_field => { "sentiment_label" => "Positive" }
+    }
+  } else if [sentiment_score] <= -0.05 {
+    mutate {
+      add_field => { "sentiment_label" => "Negative" }
+    }
+  } else {
+    mutate {
+      add_field => { "sentiment_label" => "Neutral" }
+    }
+  }
+}
+
+output {
+  elasticsearch {
+    hosts => [{% for host in groups['elasticsearch'] %}"http://{{ host }}:9200"{% if not loop.last %}, {% endif %}{% endfor %}]
+    index => "bluesky-logs-%{+YYYY.MM.dd}"
+    document_id => "%{[@metadata][_id]}"
+  }
+}
+

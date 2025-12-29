@@ -1,0 +1,9 @@
+---
+# Replace this path with the path for your vault password
+vault_password_file: "/home/controlnode/.vault_pass.txt"
+
+# Email variables
+email_host: "smtp.gmail.com"
+email_port: 587
+email_from: "your_email@gmail.com"
+email_to: "your_email@gmail.com"

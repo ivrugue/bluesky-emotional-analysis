@@ -1,0 +1,44 @@
+---
+- name: Install Kibana
+  apt:
+    name: kibana
+    state: present
+    update_cache: yes
+
+- name: Configure kibana.yml
+  template:
+    src: kibana.yml.j2
+    dest: /etc/kibana/kibana.yml
+    owner: root
+    group: root
+    mode: '0644'
+
+- name: Enable and restart Kibana
+  systemd:
+    name: kibana
+    enabled: yes
+    state: restarted
+    daemon_reload: yes
+
+- name: Wait for full restart
+  uri:
+    url: "http://{{ ansible_default_ipv4.address }}:5601/api/status"
+    method: GET
+  register: kibana_status
+  until: kibana_status.status == 200
+  retries: 30
+  delay: 5
+
+- name: Import dashboard
+  uri:
+    url: "http://{{ ansible_default_ipv4.address }}:5601/api/saved_objects/_import?overwrite=true"
+    method: POST
+    headers:
+      kbn-xsrf: "true"
+    body_format: form-multipart
+    body:
+      file:
+        file: "{{ role_path }}/files/export.ndjson"
+        filename: "export.ndjson"
+        mime_type: "application/ndjson"
+  register: kibana_import_dashboard

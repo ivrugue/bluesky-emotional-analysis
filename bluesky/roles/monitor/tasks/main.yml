@@ -1,0 +1,45 @@
+---
+- name: Copy monitoring playbook
+  template:
+    src: monitor.yml.j2
+    dest: /home/controlnode/monitor.yml
+    owner: controlnode
+    group: controlnode
+    mode: '0644'
+
+- name: Create systemd service for monitoring
+  copy:
+    dest: /etc/systemd/system/ansible-monitor.service
+    mode: '0644'
+    content: |
+      [Unit]
+      Description=Ansible host monitor
+
+      [Service]
+      Type=oneshot
+      User=controlnode
+      ExecStart=/usr/bin/ansible-playbook -i /home/controlnode/bluesky-emotional-analysis/instances.txt -u endp /home/controlnode/monitor.yml --vault-password-file {{ vault_password_file }} -T 30
+
+- name: Create systemd timer
+  copy:
+    dest: /etc/systemd/system/ansible-monitor.timer
+    mode: '0644'
+    content: |
+      [Unit]
+      Description=Host monitoring timer
+
+      [Timer]
+      OnBootSec=20
+      OnUnitActiveSec=60
+
+      [Install]
+      WantedBy=multi-user.target
+
+- name: Reload systemd
+  command: systemctl daemon-reload
+
+- name: Enable timer
+  systemd:
+    name: ansible-monitor.timer
+    enabled: yes
+    state: started

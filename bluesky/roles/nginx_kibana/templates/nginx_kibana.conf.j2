@@ -1,0 +1,17 @@
+upstream kibana_backend {
+    {% for host in groups['kibana'] %}
+    server {{ host }}:5601;
+    {% endfor %}
+}
+
+server {
+    listen 8080;
+    server_name kibana.grupo03.local;
+
+    location / {
+        proxy_pass http://kibana_backend;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    }
+}

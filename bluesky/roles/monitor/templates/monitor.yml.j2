@@ -1,0 +1,25 @@
+---
+- name: Monitor host status
+  hosts: all
+  gather_facts: no
+  vars_files:
+    - /home/controlnode/bluesky-emotional-analysis/secrets.yml 
+  tasks:
+    - name: Ping the host
+      command: ping -c 1 {% raw %}{{ inventory_hostname }}{% endraw %}
+      
+      register: ping_result
+      ignore_errors: yes
+      delegate_to: localhost
+    
+    - name: Send email if host does not respond to ping
+      mail:
+        host: "{{ email_host }}"
+        port: {{ email_port }}
+        username: "{{ email_from }}"
+        password: "{% raw %}{{ smtp_password }}{% endraw %}"
+        to: "{{ email_to }}"
+        subject: "Alert: Host {% raw %}{{ inventory_hostname }}{% endraw %} not responding"
+        body: "The node with IP {% raw %}{{ inventory_hostname }}{% endraw %} did not respond to ICMP ping from the control node. Please check the host."
+      when: ping_result is failed
+      delegate_to: localhost

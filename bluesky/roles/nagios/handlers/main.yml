@@ -1,0 +1,5 @@
+---
+- name: Reload Nagios
+  systemd:
+    name: nagios4
+    state: reloaded

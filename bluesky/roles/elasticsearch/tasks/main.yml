@@ -1,0 +1,67 @@
+---
+- name: Install Java
+  apt:
+    name: openjdk-17-jre-headless
+    state: present
+    update_cache: yes
+
+- name: Install Elasticsearch
+  apt:
+    name: elasticsearch
+    state: present
+    update_cache: yes
+
+- name: Configure elasticsearch.yml
+  template:
+    src: elasticsearch.yml.j2
+    dest: /etc/elasticsearch/elasticsearch.yml
+    owner: root
+    group: root
+    mode: '0644'
+
+- name: Set Elasticsearch permissions
+  file:
+    path: /usr/share/elasticsearch/
+    state: directory
+    group: elasticsearch
+    mode: '0775'
+
+- name: Reload systemd and restart Elasticsearch
+  systemd:
+    name: elasticsearch
+    enabled: yes
+    state: restarted
+    daemon_reload: yes
+
+- name: Wait for Elasticsearch to become available
+  uri:
+    url: "http://{{ ansible_default_ipv4.address }}:9200/_cluster/health?wait_for_status=yellow&timeout=30s"
+    method: GET
+  register: es_health
+  until: es_health.status == 200
+  retries: 10
+  delay: 5
+  run_once: true
+
+- name: Apply index template with 2 replicas
+  uri:
+    url: "http://{{ ansible_default_ipv4.address }}:9200/_index_template/bluesky_replica_template"
+    method: PUT
+    status_code: [200, 201]
+    headers:
+      Content-Type: "application/json"
+    body: |
+      {
+        "index_patterns": ["bluesky-logs-*"],
+        "priority": 10,
+        "template": {
+          "settings": {
+            "index": {
+              "number_of_shards": 1,
+              "number_of_replicas": 2
+            }
+          }
+        }
+      }
+    body_format: json
+  run_once: true

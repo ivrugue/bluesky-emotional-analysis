@@ -1,0 +1,62 @@
+---
+- name: Create virtual environment
+  command:
+    cmd: python3 -m venv /opt/generator-venv
+    creates: /opt/generator-venv
+
+- name: Install Python libraries inside the venv
+  pip:
+    executable: /opt/generator-venv/bin/pip
+    name:
+      - requests
+      - textblob
+      - atproto
+    state: present
+
+- name: Download TextBlob corpora in the venv
+  command: /opt/generator-venv/bin/python -m textblob.download_corpora
+
+- name: Copy generator.py script and inject credentials
+  template:
+    src: generator.py.j2
+    dest: /usr/local/bin/generator.py
+    owner: root
+    group: root
+    mode: '0755'
+
+- name: Create systemd service for the generator
+  copy:
+    dest: /etc/systemd/system/generator.service
+    owner: root
+    group: root
+    mode: '0644'
+    content: |
+      [Unit]
+      Description=Bluesky log generator
+      After=network.target
+
+      [Service]
+      ExecStart=/opt/generator-venv/bin/python /usr/local/bin/generator.py
+      Restart=always
+      User=endp
+      Environment=PYTHONUNBUFFERED=1
+
+      [Install]
+      WantedBy=multi-user.target
+
+- name: Create buffer file
+  file:
+    path: /usr/local/bin/pending.jsonl
+    state: touch
+    owner: endp
+    group: endp
+    mode: '0644'
+
+- name: Reload systemd
+  command: systemctl daemon-reload
+
+- name: Enable and start generator service
+  systemd:
+    name: generator
+    enabled: yes
+    state: restarted

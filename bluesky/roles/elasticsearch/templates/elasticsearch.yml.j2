@@ -1,0 +1,8 @@
+cluster.name: "bluesky-cluster"
+network.host: 0.0.0.0
+http.port: 9200
+discovery.seed_hosts: [{% for host in groups['elasticsearch'] %}"{{ host }}"{% if not loop.last %}, {% endif %}{% endfor %}]
+cluster.initial_master_nodes: [{% for host in groups['elasticsearch'] %}"{{ host }}"{% if not loop.last %}, {% endif %}{% endfor %}]
+http.cors.enabled: true
+http.cors.allow-origin: "/.*/"
+xpack.security.enabled: false

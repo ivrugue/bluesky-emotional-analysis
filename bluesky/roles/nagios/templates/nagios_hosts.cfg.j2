@@ -1,0 +1,32 @@
+{% for group in ['generator', 'logstash', 'elasticsearch', 'kibana'] %}
+{% for host in groups[group] %}
+
+define host{
+    use         linux-server
+    host_name   {{ hostvars[host].hostname | default(host) }}
+    alias       {{ group | capitalize }} {{ loop.index }}{% if hostvars[host].query_term is defined %} ({{ hostvars[host].query_term }}){% endif %}
+
+    address     {{ host }}
+}
+
+define service{
+    use                 local-service
+    host_name           {{ hostvars[host].hostname | default(host) }}
+{% if group == 'generator' %}
+    service_description Generator SSH
+    check_command       check_ssh
+{% elif group == 'logstash' %}
+    service_description Logstash TCP 5001
+    check_command       check_tcp!5001
+{% elif group == 'elasticsearch' %}
+    service_description Elasticsearch HTTP 9200
+    check_command       check_tcp!9200
+{% elif group == 'kibana' %}
+    service_description Kibana HTTP 5601
+    check_command       check_tcp!5601
+{% endif %}
+}
+
+{% endfor %}
+{% endfor %}
+
