@@ -2,7 +2,7 @@
 - name: Copy monitoring playbook
   template:
     src: monitor.yml.j2
-    dest: /home/controlnode/monitor.yml
+    dest: /home/controlnode/bluesky-emotional-analysis/playbooks/monitor.yml
     owner: controlnode
     group: controlnode
     mode: '0644'
@@ -18,7 +18,7 @@
       [Service]
       Type=oneshot
       User=controlnode
-      ExecStart=/usr/bin/ansible-playbook -i /home/controlnode/bluesky-emotional-analysis/instances.txt -u endp /home/controlnode/monitor.yml --vault-password-file {{ vault_password_file }} -T 30
+      ExecStart=/usr/bin/ansible-playbook -i /home/controlnode/bluesky-emotional-analysis/inventory/instances.txt -u endp /home/controlnode/bluesky-emotional-analysis/playbooks/monitor.yml --vault-password-file {{ vault_password_file }} -T 30
 
 - name: Create systemd timer
   copy:

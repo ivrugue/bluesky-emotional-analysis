@@ -3,7 +3,7 @@
   hosts: all
   gather_facts: no
   vars_files:
-    - /home/controlnode/bluesky-emotional-analysis/secrets.yml 
+    - /home/controlnode/bluesky-emotional-analysis/vars/secrets.yml 
   tasks:
     - name: Ping the host
       command: ping -c 1 {% raw %}{{ inventory_hostname }}{% endraw %}
