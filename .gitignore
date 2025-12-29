@@ -1,0 +1,9 @@
+*.retry
+*.log
+.ansible_cache
+*.vault
+secrets.yml
+credentials.yml
+.DS_Store
+.vscode/
+.idea/
